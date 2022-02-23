@@ -16,6 +16,7 @@ from ..views import (POSTS_ON_INDEX_PAGE,
                      )
 
 NUMBER_OF_POSTS_FROM_AUTHOR_WITH_FIRST_GROUP = 13
+NUMBER_OF_ALL_CREATED_POSTS = 14
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
 
 
@@ -191,7 +192,7 @@ class PostPagesTests(TestCase):
         self.assertEqual(author, post.author)
         self.assertEqual(text, post.text)
         self.assertEqual(group, post.group)
-        self.assertEqual(14, number_of_posts)
+        self.assertEqual(NUMBER_OF_ALL_CREATED_POSTS, number_of_posts)
 
     def test_create_post_correct_context(self):
         """Проверяем корректность контекста страницы create_post."""
@@ -224,7 +225,10 @@ class PostPagesTests(TestCase):
     def test_index_second_page_correct_records_number(self):
         # Проверка: на второй странице должно быть 4 поста.
         response = self.client.get(reverse('posts:index') + '?page=2')
-        self.assertEqual(len(response.context['page_obj']), 4)
+        self.assertEqual(
+            len(response.context['page_obj']),
+            NUMBER_OF_ALL_CREATED_POSTS - POSTS_ON_INDEX_PAGE
+        )
 
     def test_group_list_second_page_correct_records_number(self):
         # Проверка: на второй странице должно быть 4 поста.
@@ -315,6 +319,7 @@ class PostPagesTests(TestCase):
         self.assertEqual(0, follow_count)
 
     def test_correct_follow_index_page_work(self):
+        """Тестируем, что страница подписок работает корректно."""
         Post.objects.create(
             text='Тестируем follow_index_page',
             author=self.author,
@@ -331,3 +336,16 @@ class PostPagesTests(TestCase):
         response = self.authorized_client.get(reverse('posts:follow_index'))
         last_post = response.context['page_obj'][0].text
         self.assertEqual('Тестируем follow_index_page', last_post)
+
+    def test_unauthorized_client_cannot_follow(self):
+        """Тестируем, что неавторизованный пользователь
+         не может подписаться
+         """
+        response = self.guest_client.get(reverse(
+            'posts:profile_follow',
+            kwargs={'username': 'Author'})
+        )
+        self.assertRedirects(
+            response,
+            '/auth/login/?next=%2Fprofile%2FAuthor%2Ffollow%2F'
+        )

@@ -26,6 +26,7 @@ def index(request: HttpRequest) -> HttpResponse:
     context: Dict = {
         'title': title,
         'page_obj': page_obj,
+        'index': True,
     }
     return render(request, 'posts/index.html', context)
 
@@ -72,7 +73,7 @@ def profile(request: HttpRequest, username: str) -> HttpResponse:
 
 def post_detail(request: HttpRequest, post_id: int) -> HttpResponse:
     """Отображение подробной информации по одному посту."""
-    post = Post.objects.get(pk=post_id)
+    post = get_object_or_404(Post, pk=post_id)
     author = post.author
     number_of_posts = Post.objects.filter(author=author).count()
     comments = post.comments.all()
@@ -140,12 +141,7 @@ def add_comment(request, post_id):
 @login_required
 def follow_index(request):
     """Страница с постами отслеживаемых людей."""
-    author_list = request.user.follower.values('author')
-    post_list = (
-        Post.objects
-            .select_related('group', 'author')
-            .filter(author__in=author_list)
-    )
+    post_list = Post.objects.filter(author__following__user=request.user)
     paginator = Paginator(post_list, POSTS_ON_INDEX_PAGE)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -153,6 +149,7 @@ def follow_index(request):
     context: Dict = {
         'title': title,
         'page_obj': page_obj,
+        'follow': True,
     }
     return render(request, 'posts/follow.html', context)
 
@@ -160,12 +157,7 @@ def follow_index(request):
 @login_required
 def profile_follow(request, username):
     follow = get_object_or_404(User, username=username)
-    is_exist = (
-        Follow.objects
-        .filter(user=request.user, author=follow)
-        .exists()
-    )
-    if follow != request.user and not is_exist:
+    if follow != request.user:
         Follow.objects.get_or_create(
             user=request.user,
             author=follow,

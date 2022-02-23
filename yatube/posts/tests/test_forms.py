@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.conf import settings
 
-from ..models import Post, Group, User
+from ..models import Post, Group, User, Comment
 
 
 TEMP_MEDIA_ROOT = tempfile.mkdtemp(dir=settings.BASE_DIR)
@@ -116,3 +116,33 @@ class PostFormTests(TestCase):
             follow=True,
         )
         self.assertEqual(Post.objects.count(), posts_count)
+
+    def test_authorized_user_can_add_comment(self):
+        comment_count = Comment.objects.filter(post_id=1).count()
+        form_data = {
+            'text': 'Test comment'
+        }
+        self.authorized_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': 1}),
+            data=form_data,
+            follow=True,
+        )
+        self.assertEqual(
+            comment_count + 1,
+            Comment.objects.filter(post_id=1).count()
+        )
+
+    def test_unauthorized_user_can_add_comment(self):
+        comment_count = Comment.objects.filter(post_id=1).count()
+        form_data = {
+            'text': 'Test comment'
+        }
+        self.guest_client.post(
+            reverse('posts:add_comment', kwargs={'post_id': 1}),
+            data=form_data,
+            follow=True,
+        )
+        self.assertEqual(
+            comment_count,
+            Comment.objects.filter(post_id=1).count()
+        )

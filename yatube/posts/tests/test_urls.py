@@ -38,6 +38,7 @@ class PostURLTests(TestCase):
             f'/posts/{self.post.id}/': 'posts/post_detail.html',
             f'/posts/{self.post.id}/edit/': 'posts/create_post.html',
             '/create/': 'posts/create_post.html',
+            '/follow/': 'posts/follow.html',
         }
         for address, template in templates_url_names.items():
             with self.subTest(address=address):
@@ -53,6 +54,12 @@ class PostURLTests(TestCase):
             f'/posts/{self.post.id}/edit/': http.HTTPStatus.OK,
             '/create/': http.HTTPStatus.OK,
             '/non_existing_page/': http.HTTPStatus.NOT_FOUND,
+            '/follow/': http.HTTPStatus.OK,
+            f'/posts/{self.post.id}/comment/': http.HTTPStatus.FOUND,
+            f'/profile/{self.user.id}/follow':
+                http.HTTPStatus.MOVED_PERMANENTLY,
+            f'/profile/{self.user.id}/unfollow':
+                http.HTTPStatus.MOVED_PERMANENTLY,
         }
         for address, response_code in addresses_response_codes.items():
             with self.subTest(address=address):
