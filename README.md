@@ -9,7 +9,7 @@ python 3, Django 2.2, SQLite, html, bootstrap, unittest
 1. Проверьте установлен ли интерпретатор Python.
 2. Клонируйте репозиторий и перейдите в папку проекта, для этого в консоли наберите:
     ```
-    git clone https://github.com/SRSamoylenko/hw05_final
+    git clone https://github.com/ValentinDevPy/hw05_final/hw05_final
     cd hw05_final
     ```
 3. Создайте и активируйте виртуальное окружение:
